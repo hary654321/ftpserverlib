@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fclairamb/ftpserver/jsonlog"
 	log "github.com/fclairamb/go-log"
 )
 
@@ -471,7 +472,11 @@ func (c *clientHandler) handleCommandsStreamError(err error) {
 				c.logger.Error("Could not set read deadline", "err", errSet)
 			}
 
-			c.logger.Info("Client IDLE timeout", "err", err)
+			extend := make(map[string]any)
+			extend["reason"] = "Client IDLE timeout"
+
+			jsonlog.GlobalLog.HoneyLog(c.LocalAddr().String(), c.RemoteAddr().String(), "close", extend)
+
 			c.writeMessage(
 				StatusServiceNotAvailable,
 				fmt.Sprintf("command timeout (%d seconds): closing control connection", c.server.settings.IdleTimeout))
@@ -501,6 +506,9 @@ func (c *clientHandler) handleCommand(line string) {
 	command = strings.ToUpper(command)
 
 	cmdDesc := commandsMap[command]
+
+	c.logger.Info("所有命令都走到这里", command, param)
+
 	if cmdDesc == nil {
 		// Search among commands having a "special semantic". They
 		// should be sent by following the RFC-959 procedure of sending
