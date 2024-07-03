@@ -507,7 +507,11 @@ func (c *clientHandler) handleCommand(line string) {
 
 	cmdDesc := commandsMap[command]
 
-	c.logger.Info("所有命令都走到这里", command, param)
+	extend := make(map[string]any)
+	extend["cmd"] = command
+	extend["param"] = param
+
+	jsonlog.GlobalLog.HoneyLog(c.LocalAddr().String(), c.RemoteAddr().String(), "op", extend)
 
 	if cmdDesc == nil {
 		// Search among commands having a "special semantic". They
